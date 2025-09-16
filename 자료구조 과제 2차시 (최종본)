@@ -1,0 +1,139 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+#define MAX_SIZE 100
+
+typedef struct {
+    int data[MAX_SIZE];
+    int top;
+} IntStack;
+
+typedef struct {
+    char data[MAX_SIZE];
+    int top;
+} CharStack;
+
+void initIntStack(IntStack* s) {
+    s->top = -1;
+}
+
+void initCharStack(CharStack* s) {
+    s->top = -1;
+}
+
+void pushInt(IntStack* s, int value) {
+    s->data[++(s->top)] = value;
+}
+
+void pushChar(CharStack* s, char value) {
+    s->data[++(s->top)] = value;
+}
+
+int popInt(IntStack* s) {
+    return s->data[(s->top)--];
+}
+
+char popChar(CharStack* s) {
+    return s->data[(s->top)--];
+}
+
+void printIntStack(IntStack* s, const char* name) {
+    printf("%s :", name);
+    for (int i = 0; i <= s->top; i++) {
+        printf(" %d", s->data[i]);
+    }
+    printf("\n");
+}
+
+void printCharStack(CharStack* s, const char* name) {
+    printf("%s :", name);
+    for (int i = 0; i <= s->top; i++) {
+        printf(" %c", s->data[i]);
+    }
+    printf("\n");
+}
+
+int isOperator(char c) {
+    return (c == '+' || c == '-' || c == '*' || c == '/');
+}
+
+int isDigit(char c) {
+    return (c >= '0' && c <= '9');
+}
+
+int performOperation(char op, int b, int a) {
+    switch (op) {
+    case '+': return a + b;
+    case '-': return b - a;
+    case '*': return a * b;
+    case '/': return b / a;
+    default: return 0;
+    }
+}
+
+int prefix2StackEval(const char* expr) {
+    IntStack operandStack;
+    CharStack operatorStack;
+    initIntStack(&operandStack);
+    initCharStack(&operatorStack);
+
+    int len = 0;
+    while (expr[len] != '\0') len++;
+
+    for (int i = len - 1; i >= 0; i--) {
+        if (expr[i] == ' ') continue;
+
+        if (isDigit(expr[i])) {
+            int num = 0;
+            int power = 1;
+            while (i >= 0 && isDigit(expr[i])) {
+                num += (expr[i] - '0') * power;
+                power *= 10;
+                i--;
+            }
+            i++;
+            pushInt(&operandStack, num);
+        }
+        else if (isOperator(expr[i])) {
+            pushChar(&operatorStack, expr[i]);
+        }
+
+        // 각 단계에서 스택 출력
+        printIntStack(&operandStack, "Operand Stack");
+        printCharStack(&operatorStack, "Operator Stack");
+        printf("\n");
+
+        // 연산자와 두 개 이상의 피연산자가 있을 때만 계산 수행
+        while (operatorStack.top >= 0 && operandStack.top >= 1) {
+            char op = popChar(&operatorStack);
+            int a = popInt(&operandStack);
+            int b = popInt(&operandStack);
+            int result = performOperation(op, a, b);
+            pushInt(&operandStack, result);
+
+            // 계산 후 스택 출력
+            printIntStack(&operandStack, "Operand Stack");
+            printCharStack(&operatorStack, "Operator Stack");
+            printf("\n");
+        }
+    }
+
+    return popInt(&operandStack);
+}
+
+int main() {
+    char expr[MAX_SIZE];
+    printf("전위표현식 ");
+    fgets(expr, MAX_SIZE, stdin);
+
+    // 개행 문자 제거
+    int i = 0;
+    while (expr[i] != '\n' && expr[i] != '\0') i++;
+    expr[i] = '\0';
+
+    int result = prefix2StackEval(expr);
+    printf("최종결과 : %d\n", result);
+
+    return 0;
+}

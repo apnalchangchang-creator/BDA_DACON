@@ -1,0 +1,105 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+#define MAX_SIZE 100
+
+typedef struct {
+    int data[MAX_SIZE];
+    int top;
+} Stack;
+
+void initStack(Stack* s) {
+    s->top = -1;
+}
+
+void push(Stack* s, int value) {
+    s->data[++(s->top)] = value;
+}
+
+int pop(Stack* s) {
+    return s->data[(s->top)--];
+}
+
+void printStack(Stack* s, const char* name) {
+    printf("%s :", name);
+    for (int i = 0; i <= s->top; i++) {
+        printf(" %d", s->data[i]);
+    }
+    printf("\n");
+}
+
+int isOperator(char c) {
+    return (c == '+' || c == '-' || c == '*' || c == '/');
+}
+
+int isDigit(char c) {
+    return (c >= '0' && c <= '9');
+}
+
+int performOperation(char op, int b, int a) {
+    switch (op) {
+    case '+': return a + b;
+    case '-': return b - a;
+    case '*': return a * b;
+    case '/': return b / a;
+    default: return 0;
+    }
+}
+
+int prefix2StackEval(const char* expr) {
+    Stack operandStack, operatorStack;
+    initStack(&operandStack);
+    initStack(&operatorStack);
+
+    int len = 0;
+    while (expr[len] != '\0') len++;
+
+    for (int i = len - 1; i >= 0; i--) {
+        if (expr[i] == ' ') continue;
+
+        if (isDigit(expr[i])) {
+            int num = 0;
+            int power = 1;
+            while (i >= 0 && isDigit(expr[i])) {
+                num += (expr[i] - '0') * power;
+                power *= 10;
+                i--;
+            }
+            i++;
+            push(&operandStack, num);
+        }
+        else if (isOperator(expr[i])) {
+            push(&operatorStack, expr[i]);
+
+            if (operandStack.top >= 1) {
+                int a = pop(&operandStack);
+                int b = pop(&operandStack);
+                int result = performOperation(pop(&operatorStack), a, b);
+                push(&operandStack, result);
+            }
+        }
+
+        printStack(&operandStack, "Operand Stack");
+        printStack(&operatorStack, "Operator Stack");
+        printf("\n");
+    }
+
+    return pop(&operandStack);
+}
+
+int main() {
+    char expr[MAX_SIZE];
+    printf("전위표현식 ");
+    fgets(expr, MAX_SIZE, stdin);
+
+    // 개행 문자 제거
+    int i = 0;
+    while (expr[i] != '\n' && expr[i] != '\0') i++;
+    expr[i] = '\0';
+
+    int result = prefix2StackEval(expr);
+    printf("최종결과 : %d\n", result);
+
+    return 0;
+}
